@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
 const sampleSongs = [
-  { title: "Summer Vibes", previewUrl: "/songs/Back%20to%20the%2090%27s.mp3", dateCreated: "2023-06-15" },
-  { title: "Chill Beats", previewUrl: "/songs/Drowning%20in%20a%20Sea%20of%20Bills.mp3", dateCreated: "2023-05-22" },
-  { title: "Rock Anthem", previewUrl: "/songs/Playground%20of%20Hearts.mp3", dateCreated: "2023-07-01" },
-  { title: "Acoustic Dreams", previewUrl: "/songs/The%20Secret%20of%20the%20Boy.mp3", dateCreated: "2023-06-30" },
+  { title: "Summer Vibes", previewUrl: `${import.meta.env.BASE_URL}songs/Back%20to%20the%2090%27s.mp3", dateCreated: "2023-06-15` },
+  { title: "Chill Beats", previewUrl: `${import.meta.env.BASE_URL}songs/Drowning%20in%20a%20Sea%20of%20Bills.mp3", dateCreated: "2023-05-22` },
+  { title: "Rock Anthem", previewUrl: `${import.meta.env.BASE_URL}songs/Playground%20of%20Hearts.mp3", dateCreated: "2023-07-01` },
+  { title: "Acoustic Dreams", previewUrl: `${import.meta.env.BASE_URL}songs/The%20Secret%20of%20the%20Boy.mp3", dateCreated: "2023-06-30` },
 ];
 
 function App() {
