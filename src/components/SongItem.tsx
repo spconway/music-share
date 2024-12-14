@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { useToast } from '@/context/ToastProvider';
 
 interface SongItemProps {
   title: string;
@@ -22,6 +23,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const toast = useToast();
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -31,52 +33,56 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
 
   const togglePlay = async () => {
     if (!audioRef.current) {
-      console.debug("No audioRef");
+      toast.error('Audio element is not available.');
       return;
     }
   
-    // Resume the AudioContext if suspended
-    if (sharedAudioContext.state === "suspended") {
-      await sharedAudioContext.resume();
-      console.log("AudioContext resumed");
-    }
-  
-    // Setup audio connections only once
-    if (!sourceRef.current) {
-      sourceRef.current = sharedAudioContext.createMediaElementSource(audioRef.current);
-  
-      if (!analyserRef.current) {
-        analyserRef.current = sharedAudioContext.createAnalyser();
-        analyserRef.current.fftSize = 32768;
-  
-        sourceRef.current.connect(analyserRef.current); // Connect source to analyser
-        analyserRef.current.connect(sharedAudioContext.destination); // Connect analyser to speakers
-        sourceRef.current.connect(sharedAudioContext.destination); // Ensure sound reaches speakers
-        console.log("Audio connections established");
+    try {
+      // Resume the AudioContext if suspended
+      if (sharedAudioContext.state === "suspended") {
+        await sharedAudioContext.resume();
+        console.log("AudioContext resumed");
       }
-    }
-  
-    // Handle playback based on concurrent playback setting
-    if (!allowConcurrentPlayback) {
-      const allAudioElements = document.querySelectorAll('audio');
-      allAudioElements.forEach((audio) => {
-        if (audio !== audioRef.current) {
-          audio.pause();
+    
+      // Setup audio connections only once
+      if (!sourceRef.current) {
+        sourceRef.current = sharedAudioContext.createMediaElementSource(audioRef.current);
+    
+        if (!analyserRef.current) {
+          analyserRef.current = sharedAudioContext.createAnalyser();
+          analyserRef.current.fftSize = 32768;
+    
+          sourceRef.current.connect(analyserRef.current); // Connect source to analyser
+          analyserRef.current.connect(sharedAudioContext.destination); // Connect analyser to speakers
+          sourceRef.current.connect(sharedAudioContext.destination); // Ensure sound reaches speakers
+          console.log("Audio connections established");
         }
-      });
-    }
-  
-    // Toggle playback
-    if (audioRef.current.paused) {
-      await audioRef.current.play();
-      setIsPlaying(true);
-      onPlayToggle(previewUrl, true);
-      console.log("Audio playing");
-    } else {
-      audioRef.current.pause();
-      setIsPlaying(false);
-      onPlayToggle(previewUrl, false);
-      console.log("Audio paused");
+      }
+    
+      // Handle playback based on concurrent playback setting
+      if (!allowConcurrentPlayback) {
+        const allAudioElements = document.querySelectorAll('audio');
+        allAudioElements.forEach((audio) => {
+          if (audio !== audioRef.current) {
+            audio.pause();
+          }
+        });
+      }
+    
+      // Toggle playback
+      if (audioRef.current.paused) {
+        await audioRef.current.play();
+        setIsPlaying(true);
+        onPlayToggle(previewUrl, true);
+        console.log("Audio playing");
+      } else {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        onPlayToggle(previewUrl, false);
+        console.log("Audio paused");
+      }
+    } catch (error) {
+      toast.error(`Error playing audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
   
@@ -106,8 +112,8 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
       for (let i = 0; i < bufferLength; i++) {
         barHeight = dataArray[i];
   
-        ctx.fillStyle = `rgb(${barHeight + 100},50,50)`;
-        ctx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight / 2);
+        ctx.fillStyle = `rgb(${barHeight + 100},15,117)`;
+        ctx.fillRect(x, canvas.height - barHeight / 5, barWidth, barHeight / 5);
   
         x += barWidth + 1;
       }
@@ -198,7 +204,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
             ref={canvasRef}
             className="w-full h-12 bg-gray-100 rounded"
             width="600"
-            height="100"
+            height="50"
           ></canvas>
         </div>
         <div className="flex items-center space-x-4">
