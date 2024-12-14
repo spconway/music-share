@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+      "jsxFactory": "React.createElement",
+      "jsxFragmentFactory": "React.Fragment",
+      "types": ["react", "react-dom"],
+      "composite": true,
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./src/*"]
+      },
+      "jsx": "preserve",
+      "allowJs": true,
+      "checkJs": false,
+      "outDir": "./dist",
+      "target": "es5",
+      "lib": ["dom", "dom.iterable", "esnext"],
+      "module": "esnext",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "noEmit": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.*"],
+    "exclude": ["node_modules"]
+  }
+  
