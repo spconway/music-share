@@ -6,6 +6,7 @@ import { compression  } from "vite-plugin-compression2";
 // https://vite.dev/config/
 export default defineConfig({
   mode: "production",
+  base: "/music-share/",
   plugins: [react(), compression ()],
   build: {
     outDir: "dist",
