@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from '@/context/ToastProvider';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SongItemProps {
   title: string;
@@ -24,6 +25,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const toast = useToast();
+  const { theme } = useTheme();
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -112,7 +114,13 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
       for (let i = 0; i < bufferLength; i++) {
         barHeight = dataArray[i];
   
-        ctx.fillStyle = `rgb(${barHeight + 100},15,117)`;
+        // ctx.fillStyle = `rgb(${barHeight + 100},15,117)`; // 255,255
+        if (theme === 'dark') {
+          ctx.fillStyle = `rgb(${Math.min(200 + 150, 255)}, ${Math.min(200 + 150, 255)}, ${Math.min(200 + 150, 255)})`; // Lighter color for dark mode
+        } else {
+          ctx.fillStyle = `rgb(${barHeight + 100},15,117)`; // Dark mode color
+        }
+
         ctx.fillRect(x, canvas.height - barHeight / 5, barWidth, barHeight / 5);
   
         x += barWidth + 1;
@@ -181,20 +189,20 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
   }, []);
 
   return (
-    <div className="flex flex-col p-4 bg-white rounded-lg shadow">
+    <div className="flex flex-col p-4 bg-background text-foreground rounded-lg shadow dark:shadow-white">
       <div className="flex items-center justify-between">
         <div className="flex flex-col w-40">
           <h3 className="text-lg font-semibold truncate" title={title}>
             <a href="#" className="hover:underline">{title}</a>
           </h3>
-          <p className="text-sm text-gray-500">{dateCreated}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300">{dateCreated}</p>
           {duration !== null && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-300">
               {`Duration: ${formatTime(duration)}`}
             </p>
           )}
           {timeLeft !== null && isPlaying && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-300">
               {`Time Left: ${formatTime(timeLeft)}`}
             </p>
           )}
@@ -202,7 +210,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
         <div className='flex-1 px-4'>
           <canvas
             ref={canvasRef}
-            className="w-full h-12 bg-gray-100 rounded"
+            className="w-full h-12 rounded"
             width="600"
             height="50"
           ></canvas>
@@ -221,7 +229,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
             )}
           </Button>
           <a href={previewUrl} download={title}>
-            <Button variant="outline" size="icon" aria-label="Download">
+            <Button variant="default" size="icon" aria-label="Download">
               <Download className="h-4 w-4" />
             </Button>
           </a>

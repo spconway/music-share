@@ -3,6 +3,7 @@ import { SongItem } from "./components/SongItem";
 import { Settings, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useTheme } from "./context/ThemeContext";
 
 const sampleSongs = [
   { title: "Summer Vibes", previewUrl: `${import.meta.env.BASE_URL}songs/Back%20to%20the%2090%27s.mp3`, dateCreated: "2023-06-15" },
@@ -16,6 +17,8 @@ function App() {
   const [allowConcurrentPlayback, setAllowConcurrentPlayback] = useState(false);
   const [currentPlayingSong, setCurrentPlayingSong] = useState<string | null>(null);
 
+  const { toggleTheme, theme } = useTheme();
+
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
 
   const handlePlayToggle = (previewUrl: string, isPlaying: boolean) => {
@@ -25,17 +28,15 @@ function App() {
       setCurrentPlayingSong(null); // Clear the current song if it's paused
     }
   };
-  
 
   return (
-    <div className="min-h-screen bg-gray-100 relative">
-      <header className="bg-white shadow relative">
+    <div className="min-h-screen bg-background relative">
+      <header className="bg-background text-foreground shadow dark:shadow-white relative">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 relative">
-          <h1 className="text-3xl font-bold text-gray-900">Music Stream</h1>
+          <h1 className="text-3xl font-bold">Music Stream</h1>
           <Button
             variant="ghost"
-            size="icon"
-            className="absolute top-4 right-8 text-gray-700 hover:text-gray-900"
+            className="absolute top-4 right-8"
             onClick={toggleSettings}
             aria-label="Settings"
           >
@@ -62,17 +63,27 @@ function App() {
       </main>
 
       {isSettingsOpen && (
-        <div className="absolute top-16 right-12 bg-white shadow-lg p-4 rounded-lg w-72">
+        <div className="absolute top-16 right-12 bg-background shadow-lg p-4 rounded-lg w-72">
           <h2 className="text-lg font-semibold mb-4">Settings</h2>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <label htmlFor="allowConcurrentPlayback" className="text-sm font-medium text-gray-700">
+          <div className="flex flex-col justify-between mb-4">
+            <div className="flex justify-between mb-2">
+              <label htmlFor="allowConcurrentPlayback" className="text-sm font-medium text-foreground">
                 Enable Concurrent Playback
               </label>
               <Switch
                 id="airplane-mode"
                 checked={allowConcurrentPlayback}
                 onCheckedChange={() => setAllowConcurrentPlayback(!allowConcurrentPlayback)}
+              />
+            </div>
+            <div className="flex justify-between mb-2">
+              <label htmlFor="theme" className="text-sm font-medium text-foreground">
+                Dark Mode
+              </label>
+              <Switch
+                id="theme"
+                onCheckedChange={toggleTheme}
+                checked={theme === "dark"}
               />
             </div>
           </div>
