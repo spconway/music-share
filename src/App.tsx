@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { SongItem } from "./components/SongItem";
-import { Settings, X } from "lucide-react";
+import { Settings } from "./components/Settings";
+import { Settings as SettingsIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useTheme } from "./context/ThemeContext";
 
 const sampleSongs = [
@@ -20,6 +20,7 @@ function App() {
   const { toggleTheme, theme } = useTheme();
 
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
+  const toggleConcurrentPlayback = () => setAllowConcurrentPlayback(!allowConcurrentPlayback);
 
   const handlePlayToggle = (previewUrl: string, isPlaying: boolean) => {
     if (!allowConcurrentPlayback && isPlaying) {
@@ -40,7 +41,7 @@ function App() {
             onClick={toggleSettings}
             aria-label="Settings"
           >
-            {isSettingsOpen ? <X className="h-8 w-8" /> : <Settings className="w-24 h-24" />}
+            <SettingsIcon className="w-24 h-24" />
           </Button>
         </div>
       </header>
@@ -61,34 +62,14 @@ function App() {
           </div>
         </div>
       </main>
-
-      {isSettingsOpen && (
-        <div className="absolute top-16 right-12 bg-background shadow-lg p-4 rounded-lg w-72">
-          <h2 className="text-lg font-semibold mb-4">Settings</h2>
-          <div className="flex flex-col justify-between mb-4">
-            <div className="flex justify-between mb-2">
-              <label htmlFor="allowConcurrentPlayback" className="text-sm font-medium text-foreground">
-                Enable Concurrent Playback
-              </label>
-              <Switch
-                id="airplane-mode"
-                checked={allowConcurrentPlayback}
-                onCheckedChange={() => setAllowConcurrentPlayback(!allowConcurrentPlayback)}
-              />
-            </div>
-            <div className="flex justify-between mb-2">
-              <label htmlFor="theme" className="text-sm font-medium text-foreground">
-                Dark Mode
-              </label>
-              <Switch
-                id="theme"
-                onCheckedChange={toggleTheme}
-                checked={theme === "dark"}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={toggleSettings}
+        allowConcurrentPlayback={allowConcurrentPlayback}
+        toggleConcurrentPlayback={toggleConcurrentPlayback}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      />
     </div>
   );
 }
