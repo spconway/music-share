@@ -140,7 +140,7 @@ export function SongItem({
   return (
     <div className="flex flex-col p-4 bg-background text-foreground rounded-lg shadow dark:shadow-white">
       <div className="flex items-center justify-between">
-        <div className="flex flex-col w-40">
+        <div className="flex flex-col w-72">
           <h3 className="text-lg font-semibold truncate" title={title}>
             <a href="#" className="hover:underline">
               {title}
