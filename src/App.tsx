@@ -15,7 +15,25 @@ function App() {
   const { toggleTheme, theme } = useTheme();
 
   const toggleSettings = () => setIsSettingsOpen(!isSettingsOpen);
-  const toggleConcurrentPlayback = () => setAllowConcurrentPlayback(!allowConcurrentPlayback);
+  // const toggleConcurrentPlayback = () => setAllowConcurrentPlayback(!allowConcurrentPlayback);
+
+  const toggleConcurrentPlayback = () => {
+    setAllowConcurrentPlayback((prev) => {
+      const newState = !prev;
+
+      // If disabling concurrent playback, stop all but the currently playing song
+      if (!newState && currentPlayingSong) {
+        const allAudioElements = document.querySelectorAll("audio");
+        allAudioElements.forEach((audio) => {
+          if (audio.src !== currentPlayingSong) {
+            audio.pause();
+          }
+        });
+      }
+
+      return newState;
+    });
+  };
 
   const handlePlayToggle = (previewUrl: string, isPlaying: boolean) => {
     if (!allowConcurrentPlayback && isPlaying) {
@@ -54,7 +72,10 @@ function App() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="space-y-4">
-              {songs.map((song, index) => (
+            {songs.length === 0 ? (
+              <p>Loading songs...</p>
+            ) : (
+              songs.map((song, index) => (
                 <SongItem
                   key={index}
                   title={song.title}
@@ -64,7 +85,8 @@ function App() {
                   onPlayToggle={handlePlayToggle}
                   isCurrentSong={currentPlayingSong === song.url}
                 />
-              ))}
+              ))
+            )}
             </div>
           </div>
         </div>

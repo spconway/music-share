@@ -33,7 +33,7 @@ export const Settings: React.FC<SettingsProps> = ({
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <label htmlFor="allowConcurrentPlayback" className="text-sm font-medium text-foreground">
-              Enable Concurrent Playback
+              {allowConcurrentPlayback ? "Disable Concurrent Playback" : "Enable Concurrent Playback"}
             </label>
             <Switch
               id="allowConcurrentPlayback"

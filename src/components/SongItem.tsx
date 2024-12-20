@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, Download } from "lucide-react";
+import { Play, Pause, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/context/ToastProvider";
 import { useTheme } from "@/context/ThemeContext";
@@ -26,8 +26,10 @@ export function SongItem({
   isCurrentSong,
 }: SongItemProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [loading, setLoading] = useState(false); // New loading state
   const [duration, setDuration] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [audioSrc, setAudioSrc] = useState<string | null>(null); // Track the current audio source
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -44,6 +46,13 @@ export function SongItem({
     if (!audioRef.current) {
       toast.error("Audio element is not available.");
       return;
+    }
+
+    // If no audio source, set it and start loading
+    if (!audioSrc) {
+      setLoading(true); // Show loading indicator
+      setAudioSrc(previewUrl); // Trigger the network request
+      return; // Exit for now; playback will resume after source is set
     }
 
     try {
@@ -96,22 +105,54 @@ export function SongItem({
     }
   }, [isCurrentSong]);
 
+  // Handle audio source loading and visualizer initialization
   useEffect(() => {
+    const audio = audioRef.current;
+
+    if (!audio || !audioSrc) return;
+
+    const handleCanPlayThrough = async () => {
+      setLoading(false); // Stop loading indicator
+
+      // Initialize and connect the audio source and visualizer
+      try {
+        if (!sourceRef.current) {
+          sourceRef.current = sharedAudioContext.createMediaElementSource(audio);
+
+          if (!analyserRef.current) {
+            analyserRef.current = sharedAudioContext.createAnalyser();
+            analyserRef.current.fftSize = 32768;
+
+            sourceRef.current.connect(analyserRef.current);
+            analyserRef.current.connect(sharedAudioContext.destination);
+            sourceRef.current.connect(sharedAudioContext.destination);
+          }
+        }
+
+        // Automatically play the audio
+        await audio.play();
+        setIsPlaying(true);
+        onPlayToggle(previewUrl, true);
+      } catch (error) {
+        toast.error(
+          `Error playing audio: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
+      }
+    };
+
     const handleEnded = () => {
       setIsPlaying(false);
       onPlayToggle(previewUrl, false);
     };
 
-    if (audioRef.current) {
-      audioRef.current.addEventListener("ended", handleEnded);
-    }
+    audio.addEventListener("canplaythrough", handleCanPlayThrough);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.removeEventListener("ended", handleEnded);
-      }
+      audio.removeEventListener("canplaythrough", handleCanPlayThrough);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, [onPlayToggle, previewUrl]);
+  }, [audioSrc, onPlayToggle, previewUrl, toast]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -172,7 +213,13 @@ export function SongItem({
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" /> // Loading indicator
+            ) : isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
           </Button>
           <a href={previewUrl} download={title}>
             <Button variant="default" size="icon" aria-label="Download">
@@ -181,7 +228,7 @@ export function SongItem({
           </a>
         </div>
       </div>
-      <audio ref={audioRef} src={previewUrl} className="hidden">
+      <audio ref={audioRef} src={audioSrc || ""} className="hidden">
         Your browser does not support the audio element.
       </audio>
     </div>
