@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist --cname stephenconway.dev"
+    "deploy": "gh-pages -d dist --cname www.stephenconway.dev"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.1",

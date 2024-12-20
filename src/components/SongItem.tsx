@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Download } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { Play, Pause, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from '@/context/ToastProvider';
-import { useTheme } from '@/context/ThemeContext';
+import { useToast } from "@/context/ToastProvider";
+import { useTheme } from "@/context/ThemeContext";
+import { AudioVisualizer } from "@/components/AudioVisualizer";
 
 interface SongItemProps {
   title: string;
@@ -16,12 +17,18 @@ interface SongItemProps {
 // Shared AudioContext to reuse across all components
 const sharedAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayback, onPlayToggle, isCurrentSong }: SongItemProps) {
+export function SongItem({
+  title,
+  previewUrl,
+  dateCreated,
+  allowConcurrentPlayback,
+  onPlayToggle,
+  isCurrentSong,
+}: SongItemProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const toast = useToast();
@@ -29,116 +36,58 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+    const seconds = Math.floor(time % 60).toString().padStart(2, "0");
     return `${minutes}:${seconds}`;
   };
 
   const togglePlay = async () => {
     if (!audioRef.current) {
-      toast.error('Audio element is not available.');
+      toast.error("Audio element is not available.");
       return;
     }
-  
+
     try {
-      // Resume the AudioContext if suspended
       if (sharedAudioContext.state === "suspended") {
         await sharedAudioContext.resume();
-        console.log("AudioContext resumed");
       }
-    
-      // Setup audio connections only once
+
       if (!sourceRef.current) {
         sourceRef.current = sharedAudioContext.createMediaElementSource(audioRef.current);
-    
+
         if (!analyserRef.current) {
           analyserRef.current = sharedAudioContext.createAnalyser();
           analyserRef.current.fftSize = 32768;
-    
-          sourceRef.current.connect(analyserRef.current); // Connect source to analyser
-          analyserRef.current.connect(sharedAudioContext.destination); // Connect analyser to speakers
-          sourceRef.current.connect(sharedAudioContext.destination); // Ensure sound reaches speakers
-          console.log("Audio connections established");
+
+          sourceRef.current.connect(analyserRef.current);
+          analyserRef.current.connect(sharedAudioContext.destination);
+          sourceRef.current.connect(sharedAudioContext.destination);
         }
       }
-    
-      // Handle playback based on concurrent playback setting
+
       if (!allowConcurrentPlayback) {
-        const allAudioElements = document.querySelectorAll('audio');
+        const allAudioElements = document.querySelectorAll("audio");
         allAudioElements.forEach((audio) => {
           if (audio !== audioRef.current) {
             audio.pause();
           }
         });
       }
-    
-      // Toggle playback
+
       if (audioRef.current.paused) {
         await audioRef.current.play();
         setIsPlaying(true);
         onPlayToggle(previewUrl, true);
-        console.log("Audio playing");
       } else {
         audioRef.current.pause();
         setIsPlaying(false);
         onPlayToggle(previewUrl, false);
-        console.log("Audio paused");
       }
     } catch (error) {
-      toast.error(`Error playing audio: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Error playing audio: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
     }
   };
-  
-  
-  useEffect(() => {
-    if (!audioRef.current || !canvasRef.current) return;
-  
-    const analyser = analyserRef.current;
-    if (!analyser) return;
-  
-    const canvas = canvasRef.current;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    const ctx = canvas.getContext("2d");
-  
-    const renderFrame = () => {
-      if (!ctx || !isPlaying) return;
-  
-      analyser.getByteFrequencyData(dataArray);
-  
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-      const barWidth = (canvas.width / bufferLength) * 2.5;
-      let barHeight;
-      let x = 0;
-  
-      for (let i = 0; i < bufferLength; i++) {
-        barHeight = dataArray[i];
-  
-        // ctx.fillStyle = `rgb(${barHeight + 100},15,117)`; // 255,255
-        if (theme === 'dark') {
-          ctx.fillStyle = `rgb(${Math.min(200 + 150, 255)}, ${Math.min(200 + 150, 255)}, ${Math.min(200 + 150, 255)})`; // Lighter color for dark mode
-        } else {
-          ctx.fillStyle = `rgb(${barHeight + 100},15,117)`; // Dark mode color
-        }
-
-        ctx.fillRect(x, canvas.height - barHeight / 5, barWidth, barHeight / 5);
-  
-        x += barWidth + 1;
-      }
-  
-      requestAnimationFrame(renderFrame);
-    };
-  
-    if (isPlaying) {
-      renderFrame();
-    }
-  
-    return () => {
-      if (analyser) {
-        analyser.disconnect();
-      }
-    };
-  }, [isPlaying]);
 
   useEffect(() => {
     if (!isCurrentSong && isPlaying) {
@@ -179,12 +128,12 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
       setTimeLeft(audio.duration);
     };
 
-    audio.addEventListener('loadedmetadata', handleMetadataLoaded);
-    audio.addEventListener('timeupdate', updateTimeLeft);
+    audio.addEventListener("loadedmetadata", handleMetadataLoaded);
+    audio.addEventListener("timeupdate", updateTimeLeft);
 
     return () => {
-      audio.removeEventListener('loadedmetadata', handleMetadataLoaded);
-      audio.removeEventListener('timeupdate', updateTimeLeft);
+      audio.removeEventListener("loadedmetadata", handleMetadataLoaded);
+      audio.removeEventListener("timeupdate", updateTimeLeft);
     };
   }, []);
 
@@ -193,7 +142,9 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
       <div className="flex items-center justify-between">
         <div className="flex flex-col w-40">
           <h3 className="text-lg font-semibold truncate" title={title}>
-            <a href="#" className="hover:underline">{title}</a>
+            <a href="#" className="hover:underline">
+              {title}
+            </a>
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-300">{dateCreated}</p>
           {duration !== null && (
@@ -207,13 +158,12 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
             </p>
           )}
         </div>
-        <div className='flex-1 px-4'>
-          <canvas
-            ref={canvasRef}
-            className="w-full h-12 rounded"
-            width="600"
-            height="50"
-          ></canvas>
+        <div className="flex-1 px-4">
+          <AudioVisualizer
+            analyser={analyserRef.current}
+            isPlaying={isPlaying}
+            theme={theme}
+          />
         </div>
         <div className="flex items-center space-x-4">
           <Button
@@ -222,11 +172,7 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
             onClick={togglePlay}
             aria-label={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
           <a href={previewUrl} download={title}>
             <Button variant="default" size="icon" aria-label="Download">
@@ -235,12 +181,6 @@ export function SongItem({ title, previewUrl, dateCreated, allowConcurrentPlayba
           </a>
         </div>
       </div>
-      {/* <canvas
-        ref={canvasRef}
-        className="w-full h-24 mt-4 bg-gray-100 rounded"
-        width="600"
-        height="100"
-      ></canvas> */}
       <audio ref={audioRef} src={previewUrl} className="hidden">
         Your browser does not support the audio element.
       </audio>
